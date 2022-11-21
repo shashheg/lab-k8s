@@ -6,7 +6,30 @@
 <p>
 
 ```bash
+# Create the template from kubectl
+kubectl -n ns-nginx create deployment nginx-deploy --replicas=3 --image=nginx:1.22 --dry-run=client -o yaml > nginx-deploy.yaml
+# Create the namespace first
+kubectl create ns ns-nginx
+kubectl apply -f nginx-deploy.yaml
+ 
+kubectl -n ns-nginx rollout status deployment/nginx-deploy
+deployment "nginx-deploy" successfully rolled out
 
+kubectl -n ns-nginx get deploy
+NAME           READY   UP-TO-DATE   AVAILABLE   AGE
+nginx-deploy   3/3     3            3           44s
+ 
+kubectl -n ns-nginx scale deployment nginx-deploy --replicas=5
+
+kubectl -n ns-nginx rollout status deployment nginx-deploy
+kubectl -n ns-nginx rollout history deployment nginx-deploy
+
+kubectl -n ns-nginx edit deployment/nginx-deploy
+...
+    spec:
+      containers:
+      - image: nginx:1.23
+        imagePullPolicy: IfNotPresent 
 ```
 
 </p>
@@ -19,7 +42,8 @@
 <p>
 
 ```bash
-
+kubectl create namespace mynamespace
+kubectl run nginx --image=nginx --restart=Never -n mynamespace
 ```
 
 </p>
@@ -31,7 +55,8 @@
 <p>
 
 ```bash
-
+kubectl run busybox --image=busybox --restart=Never --dry-run=client -o yaml --command -- date > date-pod.yaml
+kubectl logs busybox
 ```
 
 </p>
@@ -69,7 +94,13 @@
 <p>
 
 ```bash
+kubectl create deployment nginx --image=nginx:latest
+kubectl scale deployment nginx --replicas=2
+kubectl expose deployment nginx --port=80 --target-port=80 --type=NodePort
+kubectl describe svc nginx
 
+kubectl get pods -l app=nginx -o wide
+wget -O- <IP>:80
 ```
 
 </p>
@@ -81,7 +112,14 @@ Get the logs from the pod, then correct the error to make it launch sleep 3600.
 <p>
 
 ```bash
+kubectl describe pods podfail
+...
+Warning  Failed     5s (x2 over 6s)  kubelet            Error: failed to create containerd task: OCI runtime create failed: container_linux.go:367: starting container process caused: exec: "sheep": executable file not found in $PATH: unknown
+...
 
+kubectl delete -f podfail.yaml
+# Change sheep to sleep
+kubectl apply -f podfail.yaml
 ```
 
 </p>
@@ -96,7 +134,19 @@ Get the logs from the pod, then correct the error to make it launch sleep 3600.
 <p>
 
 ```bash
+kubectl run nginx --image=nginx --restart=Never --port=80 --expose|
+kubectl get svc nginx
+kubectl get ep
 
+kubectl get svc nginx # get the IP (something like 10.108.93.130)
+kubectl run busybox --rm --image=busybox -it --restart=Never -- sh
+wget -O- IP:80
+exit
+
+kubectl patch svc nginx -p '{"spec":{"type":"NodePort"}}' 
+kubectl get svc
+wget -O- NODE_IP:31931 # if you're using Kubernetes with Docker for Windows/Mac, try 127.0.0.1
+#if you're using minikube, try minikube ip, then get the node ip such as 192.168.99.117
 ```
 
 </p>
