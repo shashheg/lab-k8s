@@ -68,7 +68,28 @@ kubectl logs busybox
 <p>
 
 ```bash
-
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  labels:
+    type: daemon
+  name: daemontest
+spec:
+  selector:
+    matchLabels:
+      run: daemon
+  template:
+    metadata:
+      labels:
+        run: daemon
+      name: daemonpod
+    spec:
+      containers:
+      - image: busybox:latest
+        name: daemonpod
+        args:
+          - sleep
+          - "3600"
 ```
 
 </p>
@@ -79,7 +100,8 @@ kubectl logs busybox
 <p>
 
 ```bash
-
+kubectl label nodes ip-192-168-17-178.ec2.internal kind=special
+kubectl create -f 05_node-label.yaml
 ```
 
 </p>
